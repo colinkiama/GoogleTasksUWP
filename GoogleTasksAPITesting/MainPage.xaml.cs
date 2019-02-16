@@ -16,7 +16,7 @@ using GoogleTasksUWPAPI;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
-namespace TasksTest
+namespace GoogleTasksAPITesting
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
@@ -28,12 +28,12 @@ namespace TasksTest
         public MainPage()
         {
             this.InitializeComponent();
-            _oAuthClient =  new GTasksOAuth(ClientSecrets.ClientId, _bundleCallbackString);
+            _oAuthClient = new GTasksOAuth(ClientSecrets.ClientId, _bundleCallbackString);
         }
 
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
-           _oAuthClient.StartAuthorisationRequest();
+            _oAuthClient.StartAuthorisationRequest();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)

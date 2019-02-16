@@ -32,6 +32,12 @@ namespace GoogleTasksUWPAPI
         private const string UserInfoEndpoint = "https://www.googleapis.com/oauth2/v3/userinfo";
         private const string TaskApiScopes = "openid%20profile%20email";
 
+        private const string AccessTokenJsonName = "access_token";
+        private const string ExpiresInJsonName = "expires_in";
+        private const string RefreshTokenJsonName = "refresh_token";
+
+
+        public event TokenEventHandler TokenGenerated;
 
         public GTasksOAuth(string clientId, string redirectUri)
         {
@@ -42,7 +48,7 @@ namespace GoogleTasksUWPAPI
         /// <summary>
         ///     Starts an OAuth 2.0 Authorization Request.
         /// </summary>
-        private void StartAuthorisationRequestAsync(object sender, RoutedEventArgs e)
+        public void StartAuthorisationRequest()
         {
             // Generates state and PKCE values.
             _state = RandomDataBase64Url(32);
@@ -166,11 +172,24 @@ namespace GoogleTasksUWPAPI
             var accessToken = tokens.GetNamedString("access_token");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
+            GenerateTokenObject(tokens);
+
             // Makes a call to the Userinfo endpoint, and prints the results.
             Output("Making API Call to Userinfo...");
             var userinfoResponse = client.GetAsync(UserInfoEndpoint).Result;
             var userinfoResponseContent = await userinfoResponse.Content.ReadAsStringAsync();
             Output(userinfoResponseContent);
+        }
+
+        private void GenerateTokenObject(JsonObject tokens)
+        {
+            var accessToken = tokens.GetNamedString(AccessTokenJsonName);
+            var refreshToken = tokens.GetNamedString(RefreshTokenJsonName);
+            var expiresIn = tokens.GetNamedNumber(ExpiresInJsonName);
+
+            Token freshToken = new Token(accessToken, refreshToken, expiresIn);
+
+            TokenGenerated?.Invoke(new TokenEventArgs(freshToken));
         }
 
         /// <summary>
