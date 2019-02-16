@@ -6,7 +6,13 @@ using System.Threading.Tasks;
 
 namespace GoogleTasksUWPAPI
 {
-    public sealed class Class1
+    public sealed class GTasks
     {
+        
+
+        public GTasks(string clientId, string clientSecret)
+        {
+
+        }
     }
 }
