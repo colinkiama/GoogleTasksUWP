@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -29,11 +30,17 @@ namespace GoogleTasksAPITesting
         {
             this.InitializeComponent();
             _oAuthClient = new GTasksOAuth(ClientSecrets.ClientId, _bundleCallbackString);
+            _oAuthClient.TokenGenerated += _oAuthClient_TokenGenerated;
         }
 
-        private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+        private void _oAuthClient_TokenGenerated(TokenEventArgs args)
         {
-            _oAuthClient.StartAuthorisationRequest();
+            Debug.WriteLine("WORKING!!!");
+        }
+
+        private async void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+        {
+            await _oAuthClient.StartAuthorisationRequestActionAsync();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
