@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Data.Json;
+using Windows.Foundation;
 using Windows.Security.Cryptography;
 using Windows.Security.Cryptography.Core;
 using Windows.Storage;
@@ -23,9 +24,6 @@ namespace GoogleTasksUWPAPI
         /// </summary>
         private readonly string _clientId;
         private readonly string _redirectUri;
-        private string _state;
-        private string _codeVerifier;
-        private string _codeChallenge;
 
         private const string AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
         private const string TokenEndpoint = "https://www.googleapis.com/oauth2/v4/token";
@@ -45,35 +43,43 @@ namespace GoogleTasksUWPAPI
             _redirectUri = redirectUri;
         }
 
+
         /// <summary>
         ///     Starts an OAuth 2.0 Authorization Request.
         /// </summary>
-        public void StartAuthorisationRequest()
+        public IAsyncAction StartAuthorisationRequestActionAsync()
+        {
+            return StartAuthorisationRequestAsync().AsAsyncAction();
+        }
+
+        /// <summary>
+        ///     Starts an OAuth 2.0 Authorization Request.
+        /// </summary>
+        internal async Task StartAuthorisationRequestAsync()
         {
             // Generates state and PKCE values.
-            _state = RandomDataBase64Url(32);
-            _codeVerifier = RandomDataBase64Url(32);
-            _codeChallenge = Base64UrlEncodeNoPadding(Sha256(_codeVerifier));
+            string state = RandomDataBase64Url(32);
+            string codeVerifier = RandomDataBase64Url(32);
+            string codeChallenge = Base64UrlEncodeNoPadding(Sha256(codeVerifier));
             const string codeChallengeMethod = "S256";
 
             // Stores the state and code_verifier values into local settings.
             // Member variables of this class may not be present when the app is resumed with the
             // authorization response, so LocalSettings can be used to persist any needed values.
             var localSettings = ApplicationData.Current.LocalSettings;
-            //localSettings.Values["state"] = state;
-            //localSettings.Values["code_verifier"] = codeVerifier;
+            localSettings.Values["state"] = state;
+            localSettings.Values["code_verifier"] = codeVerifier;
 
             // Creates the OAuth 2.0 authorization request.
             var authorizationRequest =
                 $"{AuthorizationEndpoint}?response_type=code&scope={TaskApiScopes}&redirect_uri=" +
-                $"{Uri.EscapeDataString(_redirectUri)}&client_id={_clientId}&state={_state}&code_challenge={_codeChallenge}&code_challenge_method" +
+                $"{Uri.EscapeDataString(_redirectUri)}&client_id={_clientId}&state={state}&code_challenge={codeChallenge}&code_challenge_method" +
                 $"={codeChallengeMethod}";
 
             Output("Opening authorization request URI: " + authorizationRequest);
 
             // Opens the Authorization URI in the browser.
-            var success = Launcher.LaunchUriAsync(new Uri(authorizationRequest));
-
+            await Launcher.LaunchUriAsync(new Uri(authorizationRequest));
 
 
         }
@@ -113,10 +119,9 @@ namespace GoogleTasksUWPAPI
                 var incomingState = queryStringParams["state"];
 
                 // Retrieves the expected 'state' value from local settings (saved when the request was made).
-                //var localSettings = ApplicationData.Current.LocalSettings;
-                //var expectedState = (string) localSettings.Values["state"];
+                var localSettings = ApplicationData.Current.LocalSettings;
+                var expectedState = (string)localSettings.Values["state"];
 
-                var expectedState = _state;
 
                 // Compares the received state to the expected value, to ensure that
                 // this app made the request which resulted in authorization
@@ -127,15 +132,14 @@ namespace GoogleTasksUWPAPI
                 }
 
                 // Resets expected state value to avoid a replay attack.
-                _state = null;
+                localSettings.Values["state"] = null;
 
                 // Authorization Code is now ready to use!
                 Output(Environment.NewLine + "Authorization code: " + code);
 
-                //var codeVerifier = (string) localSettings.Values["code_verifier"];
-                //PerformCodeExchangeAsync(code, codeVerifier);
+                var codeVerifier = (string)localSettings.Values["code_verifier"];
+                PerformCodeExchangeAsync(code, codeVerifier);
 
-                PerformCodeExchangeAsync(code, _codeVerifier);
             }
             else
             {
