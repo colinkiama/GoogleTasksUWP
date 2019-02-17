@@ -17,10 +17,14 @@ using UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding;
 
 namespace GoogleTasksUWPAPI
 {
+    /// <summary>
+    /// Implementation of Google Tasks API Requests
+    /// API Reference: https://developers.google.com/tasks/v1/reference/
+    /// </summary>
     public sealed class GTasksClient
     {
         private readonly Uri _tasksEndpointUri = new Uri("https://www.googleapis.com/tasks/v1");
-        private HttpClient _client;
+        private readonly HttpClient _client;
         private const string TokenScheme = "Bearer";
         private const string JsonMediaType = "application/json";
         private const string PatchHttpMethod = "PATCH";
@@ -39,24 +43,25 @@ namespace GoogleTasksUWPAPI
         #region Tasklists
 
 
-        public IAsyncOperation<GTaskList> PatchTaskListAsync(string taskListId)
+        public IAsyncOperation<GTaskList> PatchTaskListAsync(GTaskList taskListToPatch)
         {
-            return PatchTaskListTask(taskListId).AsAsyncOperation();
+            return PatchTaskListTask(taskListToPatch).AsAsyncOperation();
         }
 
-        private async Task<GTaskList> PatchTaskListTask(string taskListId)
+        private async Task<GTaskList> PatchTaskListTask(GTaskList taskListToPatch)
         {
             GTaskList listToReturn = null;
-            var requestUri = new Uri($"https://www.googleapis.com/tasks/v1/users/@me/lists/{taskListId}");
-
+            var requestUri = new Uri($"https://www.googleapis.com/tasks/v1/users/@me/lists/{taskListToPatch.Id}");
+            AddTokenInHeader(_client);
             var request = new HttpRequestMessage(HttpMethod.Patch, requestUri);
+            var taskListJson = JsonConvert.SerializeObject(taskListToPatch);
+            request.Content = new HttpStringContent(taskListJson, UnicodeEncoding.Utf8, JsonMediaType);
             
-
             var responseMessage = await _client.SendRequestAsync(request);
 
             if (responseMessage.IsSuccessStatusCode)
             {
-                
+                    
             }
             return listToReturn;
         }
@@ -117,7 +122,6 @@ namespace GoogleTasksUWPAPI
 
             AddTokenInHeader(_client);
 
-            JsonSerializerSettings settings = new JsonSerializerSettings();
             var taskListJson = JsonConvert.SerializeObject(listToInsert);
 
             var content = new HttpStringContent(taskListJson, UnicodeEncoding.Utf8, JsonMediaType);
