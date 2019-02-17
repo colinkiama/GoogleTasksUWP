@@ -30,7 +30,6 @@ namespace GoogleTasksUWPAPI
         private const string PatchHttpMethod = "PATCH";
 
 
-
         public Token Token { get; set; }              
 
 
@@ -187,11 +186,70 @@ namespace GoogleTasksUWPAPI
             }
             return taskListsContainer;
         }
+
+        // TODO: Use QueryClasses for overloads.
+        //public IAsyncOperation<GTaskListsContainer> ListTaskListsAsync(long maxResults, string pageToken)
+        //{
+        //    return ListTaskListsTask(maxResults, pageToken).AsAsyncOperation();
+        //}
+
+        //private async Task<GTaskListsContainer> ListTaskListsTask(long maxResults, string pageToken)
+        //{
+        //    const string initialRequestString = "https://www.googleapis.com/tasks/v1/users/@me/lists";
+        //    StringBuilder requestStringBuilder = new StringBuilder(initialRequestString);
+        //    requestStringBuilder.Append('?');
+        //    requestStringBuilder.Append($"maxResults={maxResults}");
+        //    requestStringBuilder.Append($"&pageToken={pageToken}");
+
+
+
+        //    var requestUri = new Uri(requestStringBuilder.ToString());
+            
+        //    GTaskListsContainer taskListsContainer = null;
+
+        //    AddTokenInHeader(_client);
+
+        //    var responseMessage = await _client.GetAsync(requestUri);
+
+        //    if (responseMessage.IsSuccessStatusCode)
+        //    {
+        //        var responseJson = await responseMessage.Content.ReadAsStringAsync();
+        //        taskListsContainer = JsonConvert.DeserializeObject<GTaskListsContainer>(responseJson);
+        //    }
+        //    return taskListsContainer;
+        //}
+
+        
+
         #endregion
 
         #region Tasks
 
-        
+        public IAsyncOperation<GTaskListsContainer> ListTasksAsync(string taskListId)
+        {
+            return ListTasksTask(taskListId).AsAsyncOperation();
+        }
+
+        private async Task<GTaskListsContainer> ListTasksTask(string taskListId)
+        {
+            GTaskListsContainer taskListContainer = null;
+
+            var requestUriBuilder = new StringBuilder($"https://www.googleapis.com/tasks/v1/lists/{taskListId}/tasks");
+            requestUriBuilder.Append("showHidden=true");
+
+            var requestUri = new Uri(requestUriBuilder.ToString());
+
+            AddTokenInHeader(_client);
+
+            var responseMessage = await _client.GetAsync(requestUri);
+            if (responseMessage.IsSuccessStatusCode)
+            {
+                var responseJson = await responseMessage.Content.ReadAsStringAsync();
+                taskListContainer = JsonConvert.DeserializeObject<GTaskListsContainer>(responseJson);
+            }
+            return taskListContainer;
+        }
+
         #endregion
 
     }
