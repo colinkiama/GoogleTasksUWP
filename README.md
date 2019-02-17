@@ -7,3 +7,4 @@ Progress so far:
 - [X] OAuth
 - [X] Tasklists
 - [ ] Task
+- [ ] Query Options
