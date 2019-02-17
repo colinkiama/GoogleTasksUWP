@@ -27,6 +27,7 @@ namespace GoogleTasksAPITesting
     {
         readonly string _bundleCallbackString = $"{ClientSecrets.BundleId}:/oauth2redirect";
         private readonly GTasksOAuth _oAuthClient;
+        private  GTasksClient _client;
         private Token _storedToken;
         public MainPage()
         {
@@ -53,6 +54,7 @@ namespace GoogleTasksAPITesting
             if (token.AccessToken != null)
             {
                 _storedToken = token;
+                _client = new GTasksClient(_storedToken);
             }
         }
 
@@ -61,6 +63,19 @@ namespace GoogleTasksAPITesting
             if (_storedToken.AccessToken != null)
             {
                 await _oAuthClient.TokenRefreshAsync(_storedToken);
+            }
+        }
+
+        private async void ListTaskListsButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (_client != null)
+            {
+                var taskListsContainer = await _client.ListTaskListsAsync();
+                var taskLists = taskListsContainer.Items;
+                foreach (var taskList in taskLists)
+                {
+                    Debug.WriteLine(taskList.Title);
+                }
             }
         }
     }

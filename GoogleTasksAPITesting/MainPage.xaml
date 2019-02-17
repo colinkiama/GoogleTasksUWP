@@ -14,8 +14,11 @@
                 Click="ButtonBase_OnClick"></Button>
 
             <Button Content="Refresh Token"
-                    Name="refreshTokenButton"
+                    Name="RefreshTokenButton"
                     Click="RefreshTokenButton_OnClick"></Button>
+            <Button Content="List Task Lists"
+                    Name="ListTaskListsButton"
+                    Click="ListTaskListsButton_OnClick"></Button>
         </StackPanel>
     </Grid>
 </Page>
