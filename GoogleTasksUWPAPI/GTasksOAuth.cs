@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
+using Windows.Web.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Data.Json;
@@ -13,6 +12,8 @@ using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI.Xaml.Navigation;
+using Windows.Web.Http.Headers;
+using UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding;
 
 namespace GoogleTasksUWPAPI
 {
@@ -166,15 +167,13 @@ namespace GoogleTasksUWPAPI
             var tokenRequestBody =
                 $"code={code}&redirect_uri={Uri.EscapeDataString(_redirectUri)}&client_id={_clientId}" +
                 $"&code_verifier={codeVerifier}&scope=&grant_type=authorization_code";
-            var content = new StringContent(tokenRequestBody, Encoding.UTF8, "application/x-www-form-urlencoded");
+            var content = new HttpStringContent(tokenRequestBody, UnicodeEncoding.Utf8, "application/x-www-form-urlencoded");
 
             // Performs the authorization code exchange.
-            var handler = new HttpClientHandler();
-            handler.AllowAutoRedirect = true;
-            var client = new HttpClient(handler);
+            var client = new HttpClient();
 
             Output(Environment.NewLine + "Exchanging code for tokens...");
-            var response = await client.PostAsync(TokenEndpoint, content);
+            var response = await client.PostAsync(new Uri(TokenEndpoint), content);
             var responseString = await response.Content.ReadAsStringAsync();
             Output(responseString);
 
@@ -188,13 +187,13 @@ namespace GoogleTasksUWPAPI
                 // Sets the Authentication header of our HTTP client using the acquired access token.
                 var tokens = JsonObject.Parse(responseString);
                 var accessToken = tokens.GetNamedString("access_token");
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                client.DefaultRequestHeaders.Authorization = new HttpCredentialsHeaderValue("Bearer", accessToken);
 
                 tokenToReturn = GenerateTokenObject(tokens);
 
                 // Makes a call to the Userinfo endpoint, and prints the results.
                 Output("Making API Call to Userinfo...");
-                var userinfoResponse = client.GetAsync(UserInfoEndpoint).Result;
+                var userinfoResponse = await client.GetAsync(new Uri(UserInfoEndpoint));
                 var userinfoResponseContent = await userinfoResponse.Content.ReadAsStringAsync();
                 Output(userinfoResponseContent);
             }
@@ -281,14 +280,13 @@ namespace GoogleTasksUWPAPI
                 $"grant_type=refresh_token&refresh_token={tokenData.RefreshToken}&" +
                 $"client_id={_clientId}&bundle_id={_redirectUri}";
 
-            var content = new StringContent(tokenRefreshBody, Encoding.UTF8, "application/x-www-form-urlencoded");
+            var content = new HttpStringContent(tokenRefreshBody, UnicodeEncoding.Utf8, "application/x-www-form-urlencoded");
 
             // Performs the authorization code exchange.
-            var handler = new HttpClientHandler {AllowAutoRedirect = true};
-            var client = new HttpClient(handler);
+            var client = new HttpClient();
 
             Output(Environment.NewLine + "Exchanging code for tokens...");
-            var response = await client.PostAsync(TokenEndpoint, content);
+            var response = await client.PostAsync(new Uri( TokenEndpoint), content);
             var responseString = await response.Content.ReadAsStringAsync();
             Output(responseString);
             if (response.IsSuccessStatusCode)

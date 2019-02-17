@@ -11,7 +11,9 @@ using Windows.Foundation;
 using Windows.Web.Http.Headers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Windows.Storage.Streams;
 using UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding;
+
 
 namespace GoogleTasksUWPAPI
 {
