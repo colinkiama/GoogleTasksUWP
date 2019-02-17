@@ -134,7 +134,7 @@ namespace GoogleTasksUWPAPI
 
         private void AddTokenInHeader(HttpClient client)
         {
-            _client.DefaultRequestHeaders.Authorization = new HttpCredentialsHeaderValue(TokenScheme, TokenScheme);
+            _client.DefaultRequestHeaders.Authorization = new HttpCredentialsHeaderValue(TokenScheme, Token.AccessToken);
 
         }
 
