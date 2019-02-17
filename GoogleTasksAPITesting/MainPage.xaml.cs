@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
@@ -26,6 +27,7 @@ namespace GoogleTasksAPITesting
     {
         readonly string _bundleCallbackString = $"{ClientSecrets.BundleId}:/oauth2redirect";
         private readonly GTasksOAuth _oAuthClient;
+        private Token _storedToken;
         public MainPage()
         {
             this.InitializeComponent();
@@ -36,6 +38,7 @@ namespace GoogleTasksAPITesting
         private void _oAuthClient_TokenGenerated(TokenEventArgs args)
         {
             Debug.WriteLine("WORKING!!!");
+            _storedToken = args.GeneratedToken;
         }
 
         private async void ButtonBase_OnClick(object sender, RoutedEventArgs e)
@@ -43,10 +46,22 @@ namespace GoogleTasksAPITesting
             await _oAuthClient.StartAuthorisationRequestActionAsync();
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            _oAuthClient.HandleUriCallback(e);
+            var token = await _oAuthClient.HandleUriCallbackAsync(e);
+            if (token.AccessToken != null)
+            {
+                _storedToken = token;
+            }
+        }
+
+        private async void RefreshTokenButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (_storedToken.AccessToken != null)
+            {
+                await _oAuthClient.TokenRefreshAsync(_storedToken);
+            }
         }
     }
 }

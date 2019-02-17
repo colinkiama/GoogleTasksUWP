@@ -88,8 +88,18 @@ namespace GoogleTasksUWPAPI
         ///     Processes the OAuth 2.0 Authorization Response
         /// </summary>
         /// <param name="e"></param>
-        public void HandleUriCallback(NavigationEventArgs e)
+        public IAsyncOperation<Token> HandleUriCallbackAsync(NavigationEventArgs e)
         {
+            return HandleUriCallbackTask(e).AsAsyncOperation();
+        }
+
+        /// <summary>
+        ///     Processes the OAuth 2.0 Authorization Response
+        /// </summary>
+        /// <param name="e"></param>
+        internal async Task<Token> HandleUriCallbackTask(NavigationEventArgs e)
+        {
+            Token tokenToGenerate = new Token();
             if (e.Parameter is Uri authorizationResponse)
             {
                 // Gets URI from navigation parameters.
@@ -105,13 +115,13 @@ namespace GoogleTasksUWPAPI
                 if (queryStringParams.ContainsKey("error"))
                 {
                     Output($"OAuth authorization error: {queryStringParams["error"]}.");
-                    return;
+                    return tokenToGenerate;
                 }
 
                 if (!queryStringParams.ContainsKey("code") || !queryStringParams.ContainsKey("state"))
                 {
                     Output("Malformed authorization response. " + queryString);
-                    return;
+                    return tokenToGenerate;
                 }
 
                 // Gets the Authorization code & state
@@ -128,7 +138,7 @@ namespace GoogleTasksUWPAPI
                 if (incomingState != expectedState)
                 {
                     Output($"Received request with invalid state ({incomingState})");
-                    return;
+                    return tokenToGenerate;
                 }
 
                 // Resets expected state value to avoid a replay attack.
@@ -138,17 +148,20 @@ namespace GoogleTasksUWPAPI
                 Output(Environment.NewLine + "Authorization code: " + code);
 
                 var codeVerifier = (string)localSettings.Values["code_verifier"];
-                PerformCodeExchangeAsync(code, codeVerifier);
+                tokenToGenerate = await PerformCodeExchangeAsync(code, codeVerifier);
 
             }
             else
             {
                 Debug.WriteLine(e.Parameter);
             }
+
+            return tokenToGenerate;
         }
 
-        private async void PerformCodeExchangeAsync(string code, string codeVerifier)
+        private async Task<Token> PerformCodeExchangeAsync(string code, string codeVerifier)
         {
+            Token tokenToReturn = new Token();
             // Builds the Token request
             var tokenRequestBody =
                 $"code={code}&redirect_uri={Uri.EscapeDataString(_redirectUri)}&client_id={_clientId}" +
@@ -167,33 +180,42 @@ namespace GoogleTasksUWPAPI
 
             if (!response.IsSuccessStatusCode)
             {
-                Output("Authorization code exchange failed.");
-                return;
+                Output("Authorization code exchange failed.");                
             }
 
-            // Sets the Authentication header of our HTTP client using the acquired access token.
-            var tokens = JsonObject.Parse(responseString);
-            var accessToken = tokens.GetNamedString("access_token");
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            else
+            { 
+                // Sets the Authentication header of our HTTP client using the acquired access token.
+                var tokens = JsonObject.Parse(responseString);
+                var accessToken = tokens.GetNamedString("access_token");
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-            GenerateTokenObject(tokens);
+                tokenToReturn = GenerateTokenObject(tokens);
 
-            // Makes a call to the Userinfo endpoint, and prints the results.
-            Output("Making API Call to Userinfo...");
-            var userinfoResponse = client.GetAsync(UserInfoEndpoint).Result;
-            var userinfoResponseContent = await userinfoResponse.Content.ReadAsStringAsync();
-            Output(userinfoResponseContent);
+                // Makes a call to the Userinfo endpoint, and prints the results.
+                Output("Making API Call to Userinfo...");
+                var userinfoResponse = client.GetAsync(UserInfoEndpoint).Result;
+                var userinfoResponseContent = await userinfoResponse.Content.ReadAsStringAsync();
+                Output(userinfoResponseContent);
+            }
+            return tokenToReturn;
         }
 
 
-        private void GenerateTokenObject(JsonObject tokens)
+        private Token GenerateTokenObject(JsonObject tokens, string previousRefreshToken = "")
         {
             var accessToken = tokens.GetNamedString(AccessTokenJsonName);
-            var refreshToken = tokens.GetNamedString(RefreshTokenJsonName);
+            var refreshToken = tokens.GetNamedString(RefreshTokenJsonName,"");
+            if (refreshToken == "")
+            {
+                refreshToken = previousRefreshToken;
+            }
+
             var expiresIn = tokens.GetNamedNumber(ExpiresInJsonName);
 
             Token freshToken = new Token(accessToken, refreshToken, expiresIn);
             TokenGenerated?.Invoke(new TokenEventArgs(freshToken));
+            return freshToken;
         }
 
         /// <summary>
@@ -244,6 +266,43 @@ namespace GoogleTasksUWPAPI
             base64 = base64.Replace("=", "");
 
             return base64;
+        }
+
+
+        public IAsyncOperation<Token> TokenRefreshAsync(Token tokenData)
+        {
+            return TokenRefreshTask(tokenData).AsAsyncOperation();
+        }
+
+        internal async Task<Token> TokenRefreshTask(Token tokenData)
+        {
+            Token generatedToken = new Token();
+            var tokenRefreshBody =
+                $"grant_type=refresh_token&refresh_token={tokenData.RefreshToken}&" +
+                $"client_id={_clientId}&bundle_id={_redirectUri}";
+
+            var content = new StringContent(tokenRefreshBody, Encoding.UTF8, "application/x-www-form-urlencoded");
+
+            // Performs the authorization code exchange.
+            var handler = new HttpClientHandler {AllowAutoRedirect = true};
+            var client = new HttpClient(handler);
+
+            Output(Environment.NewLine + "Exchanging code for tokens...");
+            var response = await client.PostAsync(TokenEndpoint, content);
+            var responseString = await response.Content.ReadAsStringAsync();
+            Output(responseString);
+            if (response.IsSuccessStatusCode)
+            {
+                var tokenJson = JsonObject.Parse(responseString);
+               generatedToken = GenerateTokenObject(tokenJson, tokenData.RefreshToken);
+            }
+
+            else
+            {
+                Debug.WriteLine("Failed");
+            }
+
+            return generatedToken;
         }
     }
 }

@@ -14,8 +14,9 @@ namespace GoogleTasksUWPAPI
         public DateTimeOffset ExpiryTime { get; set; }
         
     
+        internal Token() { }
 
-        internal Token(string accessToken, string refreshToken, double expiresIn)
+        public Token(string accessToken, string refreshToken, double expiresIn)
         {
             AccessToken = accessToken;
             RefreshToken = refreshToken;

@@ -9,7 +9,13 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <Button Content="Login"
+        <StackPanel>
+            <Button Content="Login"
                 Click="ButtonBase_OnClick"></Button>
+
+            <Button Content="Refresh Token"
+                    Name="refreshTokenButton"
+                    Click="RefreshTokenButton_OnClick"></Button>
+        </StackPanel>
     </Grid>
 </Page>
