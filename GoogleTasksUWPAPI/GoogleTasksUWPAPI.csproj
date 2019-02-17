@@ -123,7 +123,9 @@
   <ItemGroup>
     <Compile Include="GTask.cs" />
     <Compile Include="GTaskList.cs" />
+    <Compile Include="GTaskListsContainer.cs" />
     <Compile Include="GTasksClient.cs" />
+    <Compile Include="GTasksContainer.cs" />
     <Compile Include="GTasksOAuth.cs" />
     <Compile Include="Link.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
