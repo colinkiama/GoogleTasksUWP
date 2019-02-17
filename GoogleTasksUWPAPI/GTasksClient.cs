@@ -225,14 +225,14 @@ namespace GoogleTasksUWPAPI
 
         #region Tasks
 
-        public IAsyncOperation<GTaskListsContainer> ListTasksAsync(string taskListId)
+        public IAsyncOperation<GTasksContainer> ListTasksAsync(string taskListId)
         {
             return ListTasksTask(taskListId).AsAsyncOperation();
         }
 
-        private async Task<GTaskListsContainer> ListTasksTask(string taskListId)
+        private async Task<GTasksContainer> ListTasksTask(string taskListId)
         {
-            GTaskListsContainer taskListContainer = null;
+            GTasksContainer taskListContainer = null;
 
             var requestUriBuilder = new StringBuilder($"https://www.googleapis.com/tasks/v1/lists/{taskListId}/tasks");
             requestUriBuilder.Append("showHidden=true");
@@ -245,10 +245,46 @@ namespace GoogleTasksUWPAPI
             if (responseMessage.IsSuccessStatusCode)
             {
                 var responseJson = await responseMessage.Content.ReadAsStringAsync();
-                taskListContainer = JsonConvert.DeserializeObject<GTaskListsContainer>(responseJson);
+                taskListContainer = JsonConvert.DeserializeObject<GTasksContainer>(responseJson);
             }
             return taskListContainer;
         }
+
+        public IAsyncOperation<GTask> GetTaskAsync(string taskListId, string taskId)
+        {
+
+            return GetTaskTask(taskListId, taskId).AsAsyncOperation();
+            
+        }
+
+        private async Task<GTask> GetTaskTask(string taskListId, string taskId)
+        {
+            GTask taskToReturn = null;
+            var requestUri = new Uri("https://www.googleapis.com/tasks/v1/lists/" +
+                                     $"{taskListId}/tasks/{taskId}");
+
+            AddTokenInHeader(_client);
+
+            var responseMessage = await _client.GetAsync(requestUri);
+            if (responseMessage.IsSuccessStatusCode)
+            {
+                var responseJson = await responseMessage.Content.ReadAsStringAsync();
+                taskToReturn = JsonConvert.DeserializeObject<GTask>(responseJson);
+            }
+
+            return taskToReturn;
+        }
+
+
+        private async Task<GTask> InsertTaskTask(GTask taskToInsert)
+        {
+            GTask taskToReturn = null;
+
+            
+
+            return taskToReturn;
+        }
+
 
         #endregion
 
