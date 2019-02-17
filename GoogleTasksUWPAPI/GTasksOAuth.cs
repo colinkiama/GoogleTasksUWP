@@ -12,7 +12,6 @@ using Windows.Security.Cryptography.Core;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.System;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Navigation;
 
 namespace GoogleTasksUWPAPI
@@ -20,7 +19,8 @@ namespace GoogleTasksUWPAPI
     public sealed class GTasksOAuth
     {
         /// <summary>
-        ///     OAuth 2.0 client configuration.
+        /// Modified version of Google's OAuth for Universal App
+        /// example: https://github.com/googlesamples/oauth-apps-for-windows/tree/master/OAuthUniversalApp
         /// </summary>
         private readonly string _clientId;
         private readonly string _redirectUri;
@@ -28,7 +28,7 @@ namespace GoogleTasksUWPAPI
         private const string AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
         private const string TokenEndpoint = "https://www.googleapis.com/oauth2/v4/token";
         private const string UserInfoEndpoint = "https://www.googleapis.com/oauth2/v3/userinfo";
-        private const string TaskApiScopes = "openid%20profile%20email";
+        private const string TaskApiScopes = "openid%20email%20profile%20https://www.googleapis.com/auth/tasks%20profile";
 
         private const string AccessTokenJsonName = "access_token";
         private const string ExpiresInJsonName = "expires_in";
@@ -185,6 +185,7 @@ namespace GoogleTasksUWPAPI
             Output(userinfoResponseContent);
         }
 
+
         private void GenerateTokenObject(JsonObject tokens)
         {
             var accessToken = tokens.GetNamedString(AccessTokenJsonName);
@@ -192,7 +193,6 @@ namespace GoogleTasksUWPAPI
             var expiresIn = tokens.GetNamedNumber(ExpiresInJsonName);
 
             Token freshToken = new Token(accessToken, refreshToken, expiresIn);
-
             TokenGenerated?.Invoke(new TokenEventArgs(freshToken));
         }
 

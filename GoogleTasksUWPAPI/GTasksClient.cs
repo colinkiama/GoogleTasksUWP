@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace GoogleTasksUWPAPI
 {
-    public sealed class GTasks
+    public sealed class GTasksClient
     {
-        
+        readonly Uri _tasksEndpointUri = new Uri("https://www.googleapis.com/tasks/v1");
 
-        public GTasks(string clientId, string clientSecret)
+        public GTasksClient(Token token)
         {
 
         }

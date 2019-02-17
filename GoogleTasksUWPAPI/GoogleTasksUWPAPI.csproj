@@ -121,7 +121,7 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="GTasks.cs" />
+    <Compile Include="GTasksClient.cs" />
     <Compile Include="GTasksOAuth.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Token.cs" />
