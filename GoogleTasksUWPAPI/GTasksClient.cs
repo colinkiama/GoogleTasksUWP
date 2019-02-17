@@ -15,7 +15,7 @@ namespace GoogleTasksUWPAPI
     public sealed class GTasksClient
     {
         private readonly Uri _tasksEndpointUri = new Uri("https://www.googleapis.com/tasks/v1");
-
+        private HttpClient _client;
         private const string TokenScheme = "Bearer";
         public Token Token { get; set; }              
 
@@ -23,9 +23,47 @@ namespace GoogleTasksUWPAPI
         public GTasksClient(Token token)
         {
             Token = token;
+            _client = new HttpClient();
         }
 
         #region Tasklists
+
+        public IAsyncOperation<GTaskList> InsertTaskListAsync(GTaskList listToInsert)
+        {
+            return InsertTaskListTask(listToInsert).AsAsyncOperation();
+        }
+
+        private async Task<GTaskList> InsertTaskListTask(GTaskList listToInsert)
+        {
+            GTaskList listToReturn = null;
+            var requestUri = "https://www.googleapis.com/tasks/v1/users/@me/lists";
+
+            return listToReturn;
+        }
+
+
+        public IAsyncOperation<GTaskList> GetTaskListAsync(string taskListId)
+        {
+           return GetTaskListTask(taskListId).AsAsyncOperation();
+        }
+
+        internal async Task<GTaskList> GetTaskListTask(string taskListId)
+        {
+            GTaskList taskList = null;
+            var requestUri = $"https://www.googleapis.com/tasks/v1/users/@me/lists/{taskListId}";
+
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TokenScheme, TokenScheme);
+
+            var responseMessage = await _client.GetAsync(requestUri);
+
+            if (responseMessage.IsSuccessStatusCode)
+            {
+                var responseJson = await responseMessage.Content.ReadAsStringAsync();
+                taskList = JsonConvert.DeserializeObject<GTaskList>(responseJson);
+            }
+
+            return taskList;
+        }
 
         public IAsyncOperation<GTaskListsContainer> ListTaskListsAsync()
         {
@@ -35,12 +73,11 @@ namespace GoogleTasksUWPAPI
         internal async Task<GTaskListsContainer> ListTaskListsTask()
         {
             const string requestUri = "https://www.googleapis.com/tasks/v1/users/@me/lists";
-            GTaskListsContainer taskListsContainer = new GTaskListsContainer();
+            GTaskListsContainer taskListsContainer = null;
 
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TokenScheme, Token.AccessToken);
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TokenScheme, Token.AccessToken);
 
-            var responseMessage = await client.GetAsync(requestUri);
+            var responseMessage = await _client.GetAsync(requestUri);
 
             if (responseMessage.IsSuccessStatusCode)
             {
