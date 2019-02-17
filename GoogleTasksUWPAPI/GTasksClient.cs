@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Data.Json;
 using Windows.Foundation;
+using Windows.Web.Http.Headers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -17,6 +19,11 @@ namespace GoogleTasksUWPAPI
         private readonly Uri _tasksEndpointUri = new Uri("https://www.googleapis.com/tasks/v1");
         private HttpClient _client;
         private const string TokenScheme = "Bearer";
+        private const string JsonMediaType = "application/json";
+
+
+
+
         public Token Token { get; set; }              
 
 
@@ -28,6 +35,35 @@ namespace GoogleTasksUWPAPI
 
         #region Tasklists
 
+
+        public IAsyncOperation<GTaskList> UpdateTaskListAsync(GTaskList listToUpdate)
+        {
+            return UpdateTaskListTask(listToUpdate).AsAsyncOperation();
+        }
+
+        private async Task<GTaskList> UpdateTaskListTask(GTaskList listToUpdate)
+        {
+            GTaskList listToReturn = null;
+
+            var requestUri = $"https://www.googleapis.com/tasks/v1/users/@me/lists/{listToUpdate.Id}";
+
+            AddTokenInHeader(_client);
+
+            var taskListJson = JsonConvert.SerializeObject(listToUpdate);
+
+            var content = new StringContent(taskListJson, Encoding.UTF8, JsonMediaType);
+
+            var responseMessage = await _client.PutAsync(requestUri, content);
+
+            if (responseMessage.IsSuccessStatusCode)
+            {
+                var responseJson = await responseMessage.Content.ReadAsStringAsync();
+                listToReturn = JsonConvert.DeserializeObject<GTaskList>(responseJson);
+            }
+
+            return listToReturn;
+        }
+
         public IAsyncOperation<GTaskList> InsertTaskListAsync(GTaskList listToInsert)
         {
             return InsertTaskListTask(listToInsert).AsAsyncOperation();
@@ -38,7 +74,27 @@ namespace GoogleTasksUWPAPI
             GTaskList listToReturn = null;
             var requestUri = "https://www.googleapis.com/tasks/v1/users/@me/lists";
 
+            AddTokenInHeader(_client);
+
+            JsonSerializerSettings settings = new JsonSerializerSettings();
+            var taskListJson = JsonConvert.SerializeObject(listToInsert);
+
+            var content = new StringContent(taskListJson, Encoding.UTF8, "application/json");
+            var responseMessage = await _client.PostAsync(requestUri, content);
+
+            if (responseMessage.IsSuccessStatusCode)
+            {
+                var responseJson = await responseMessage.Content.ReadAsStringAsync();
+                listToReturn =  JsonConvert.DeserializeObject<GTaskList>(responseJson);
+            }
+
             return listToReturn;
+        }
+
+        private void AddTokenInHeader(HttpClient client)
+        {
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TokenScheme, TokenScheme);
+
         }
 
 
@@ -52,7 +108,7 @@ namespace GoogleTasksUWPAPI
             GTaskList taskList = null;
             var requestUri = $"https://www.googleapis.com/tasks/v1/users/@me/lists/{taskListId}";
 
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TokenScheme, TokenScheme);
+            AddTokenInHeader(_client);
 
             var responseMessage = await _client.GetAsync(requestUri);
 
@@ -75,7 +131,7 @@ namespace GoogleTasksUWPAPI
             const string requestUri = "https://www.googleapis.com/tasks/v1/users/@me/lists";
             GTaskListsContainer taskListsContainer = null;
 
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TokenScheme, Token.AccessToken);
+            AddTokenInHeader(_client);
 
             var responseMessage = await _client.GetAsync(requestUri);
 
