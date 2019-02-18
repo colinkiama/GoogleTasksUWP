@@ -4,9 +4,9 @@ Google Tasks UWP API
 ## How to install:
 
 Available on Nuget:
-```
-Install-Package GoogleTasksUWP.ColinKiama -Version 0.6.0
-```
+
+Use command: `Install-Package GoogleTasksUWP.ColinKiama`
+
 or search for `GoogleTasksUWP.ColinKiama`
 
 ## Progress:
