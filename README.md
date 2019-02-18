@@ -21,4 +21,10 @@ Progress so far:
 ## How to use:
 1. Follow instructions from "using your own credentials" https://github.com/googlesamples/oauth-apps-for-windows/tree/master/OAuthUniversalApp#using-your-own-credentials
 
-2. Use the GTasksOauthClient to 
+2. Use GTasksOauth to start an authorisation request
+
+3. Handle the Uri Callback with GTasksOauth to generate a token.
+
+4. Use the token to create a GTasksClient
+
+5. Start making requests.
