@@ -17,3 +17,8 @@ Progress so far:
 - [X] Tasklists
 - [X] Tasks
 - [ ] Query Options
+
+## How to use:
+1. Follow instructions from "using your own credentials" https://github.com/googlesamples/oauth-apps-for-windows/tree/master/OAuthUniversalApp#using-your-own-credentials
+
+2. Use the GTasksOauthClient to 
