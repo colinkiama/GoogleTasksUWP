@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>GoogleTasksUWP.ColinKiama</id>
+    <version>0.5.0</version>
+    <title>Google Tasks UWP API</title>
+    <authors>Colin Kiama</authors>
+    <owners>Colin Kiama</owners>
+    <licenseUrl>https://raw.githubusercontent.com/colinkiama/GoogleTasksUWP/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/colinkiama/GoogleTasksUWP</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>UWP Implementation of the Google Tasks API</description>
+    <releaseNotes>Beta Release</releaseNotes>
+    <copyright>Copyright (c) 2019 Colin Kiama</copyright>
+    <tags>google tasks task list colin kiama googletasks googlelist uwp windows windows10 api googleapi</tags>
+  </metadata>
+
+  <files>
+   <!-- DLLs and resources -->
+        <!-- <file src=".\bin\ARM\Release\GoogleTasksUWPAPI.winmd" target="runtimes\win10-arm\native"/> -->
+        <file src=".\bin\ARM\Release\GoogleTasksUWPAPI.pri" target="runtimes\win10-arm\native"/>
+
+        <!-- <file src=".\bin\x64\Release\GoogleTasksUWPAPI.winmd" target="runtimes\win10-x64\native"/> -->
+        <file src=".\bin\x64\Release\GoogleTasksUWPAPI.pri" target="runtimes\win10-x64\native"/>
+
+        <!-- <file src=".\bin\x86\Release\GoogleTasksUWPAPI.winmd" target="runtimes\win10-x86\native"/> -->
+        <file src=".\bin\x86\Release\GoogleTasksUWPAPI.pri" target="runtimes\win10-x86\native"/>
+
+        <!-- .targets -->
+        <file src="GoogleTasksUWPAPI.targets" target="build\native"/>
+
+  </files>
+</package>
