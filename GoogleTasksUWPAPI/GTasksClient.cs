@@ -234,10 +234,7 @@ namespace GoogleTasksUWPAPI
         {
             GTasksContainer taskListContainer = null;
 
-            var requestUriBuilder = new StringBuilder($"https://www.googleapis.com/tasks/v1/lists/{taskListId}/tasks");
-            requestUriBuilder.Append("showHidden=true");
-
-            var requestUri = new Uri(requestUriBuilder.ToString());
+            var requestUri = new Uri($"https://www.googleapis.com/tasks/v1/lists/{taskListId}/tasks");
 
             AddTokenInHeader(_client);
 
@@ -257,7 +254,7 @@ namespace GoogleTasksUWPAPI
             
         }
 
-        private async Task<GTask> GetTaskTask(string taskListId, string taskId)
+        private async Task<GTask> GetTaskTask(string taskId, string taskListId)
         {
             GTask taskToReturn = null;
             var requestUri = new Uri("https://www.googleapis.com/tasks/v1/lists/" +
@@ -276,16 +273,108 @@ namespace GoogleTasksUWPAPI
         }
 
 
-        private async Task<GTask> InsertTaskTask(GTask taskToInsert)
+        private async Task<GTask> InsertTaskTask(GTask taskToInsert, string taskListId)
         {
             GTask taskToReturn = null;
 
+            var requestUri = new Uri($"https://www.googleapis.com/tasks/v1/lists/{taskListId}/tasks");
+            AddTokenInHeader(_client);
+            var taskJson = JsonConvert.SerializeObject(taskToInsert);
+
+            var content = new HttpStringContent(taskJson, UnicodeEncoding.Utf8, JsonMediaType);
+
+            var responseMessage = await _client.PostAsync(requestUri, content);
+
+            if (responseMessage.IsSuccessStatusCode)
+            {
+                var responseJson = await responseMessage.Content.ReadAsStringAsync();
+                taskToReturn = JsonConvert.DeserializeObject<GTask>(responseJson);
+            }
             
 
             return taskToReturn;
         }
 
+        private async Task<GTask> UpdateTaskTask(GTask taskToUpdate, string taskListId)
+        {
+            GTask taskToReturn = null;
+            var requestUri = new Uri($"https://www.googleapis.com/tasks/v1/lists/{taskListId}/tasks/{taskToUpdate.Id}");
+            AddTokenInHeader(_client);
+            var taskJson = JsonConvert.SerializeObject(taskToUpdate);
+            var content = new HttpStringContent(taskJson, UnicodeEncoding.Utf8, JsonMediaType);
 
+            var responseMessage = await _client.PutAsync(requestUri, content);
+            if (responseMessage.IsSuccessStatusCode)
+            {
+                var responseJson = await responseMessage.Content.ReadAsStringAsync();
+                taskToReturn = JsonConvert.DeserializeObject<GTask>(responseJson);
+            }
+
+            return taskToReturn;
+
+        }
+
+        private async Task<bool> DeleteTaskTask(GTask taskToDelete, string taskListId)
+        {
+            var requestUri = new Uri($"https://www.googleapis.com/tasks/v1/lists/{taskListId}/tasks/{taskToDelete.Id}");
+            AddTokenInHeader(_client);
+
+            var responseMessage = await _client.DeleteAsync(requestUri);
+            return responseMessage.IsSuccessStatusCode;
+        }
+
+        private async Task<bool> ClearCompletedTasksTask(string taskListId)
+        {
+            var requestUri = new Uri($"https://www.googleapis.com/tasks/v1/lists/{taskListId}/clear");
+            AddTokenInHeader(_client);
+            var responseMessage = await _client.PostAsync(requestUri, null);
+            return responseMessage.IsSuccessStatusCode;
+        }
+ 
+        private async Task<GTask> MoveTaskTask(string taskToMoveId, string taskListId)
+        {
+            GTask taskToReturn = null;
+
+            var requestUri = new Uri($"https://www.googleapis.com/tasks/v1/lists/{taskListId}/tasks/{taskToMoveId}/move");
+
+            AddTokenInHeader(_client);
+
+            var responseMessage = await _client.PostAsync(requestUri, null);
+
+            if (responseMessage.IsSuccessStatusCode)
+            {
+                var responseJson = await responseMessage.Content.ReadAsStringAsync();
+                taskToReturn = JsonConvert.DeserializeObject<GTask>(responseJson);
+            }
+
+            return taskToReturn;
+        }
+        
+        private async Task<GTask> PatchTaskTask(GTask taskToPatch, string taskListId)
+        {
+            GTask taskToReturn = null;
+            var requestUri = new Uri($"https://www.googleapis.com/tasks/v1/lists/{taskListId}/tasks/{taskToPatch.Id}");
+            var message = new HttpRequestMessage(HttpMethod.Patch, requestUri);
+
+            var taskJson = JsonConvert.SerializeObject(taskToPatch);
+            var content = new HttpStringContent(taskJson, UnicodeEncoding.Utf8, JsonMediaType);
+
+            message.Content = content;
+
+            AddTokenInHeader(_client);
+
+            var responseMessage = await _client.SendRequestAsync(message);
+            if (responseMessage.IsSuccessStatusCode)
+            {
+                var responseJson = await responseMessage.Content.ReadAsStringAsync();
+                taskToReturn = JsonConvert.DeserializeObject<GTask>(responseJson);
+            }
+
+
+            return taskToReturn;
+        }
+        
+        
         #endregion
 
     }
