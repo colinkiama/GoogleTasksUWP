@@ -30,7 +30,7 @@ namespace GoogleTasksUWPAPI
         private const string PatchHttpMethod = "PATCH";
 
 
-        public Token Token { get; set; }              
+        public Token Token { get; set; }
 
 
         public GTasksClient(Token token)
@@ -55,12 +55,12 @@ namespace GoogleTasksUWPAPI
             var request = new HttpRequestMessage(HttpMethod.Patch, requestUri);
             var taskListJson = JsonConvert.SerializeObject(taskListToPatch);
             request.Content = new HttpStringContent(taskListJson, UnicodeEncoding.Utf8, JsonMediaType);
-            
+
             var responseMessage = await _client.SendRequestAsync(request);
 
             if (responseMessage.IsSuccessStatusCode)
             {
-                    
+
             }
             return listToReturn;
         }
@@ -129,7 +129,7 @@ namespace GoogleTasksUWPAPI
             if (responseMessage.IsSuccessStatusCode)
             {
                 var responseJson = await responseMessage.Content.ReadAsStringAsync();
-                listToReturn =  JsonConvert.DeserializeObject<GTaskList>(responseJson);
+                listToReturn = JsonConvert.DeserializeObject<GTaskList>(responseJson);
             }
 
             return listToReturn;
@@ -144,7 +144,7 @@ namespace GoogleTasksUWPAPI
 
         public IAsyncOperation<GTaskList> GetTaskListAsync(string taskListId)
         {
-           return GetTaskListTask(taskListId).AsAsyncOperation();
+            return GetTaskListTask(taskListId).AsAsyncOperation();
         }
 
         internal async Task<GTaskList> GetTaskListTask(string taskListId)
@@ -187,39 +187,7 @@ namespace GoogleTasksUWPAPI
             return taskListsContainer;
         }
 
-        // TODO: Use QueryClasses for overloads.
-        //public IAsyncOperation<GTaskListsContainer> ListTaskListsAsync(long maxResults, string pageToken)
-        //{
-        //    return ListTaskListsTask(maxResults, pageToken).AsAsyncOperation();
-        //}
-
-        //private async Task<GTaskListsContainer> ListTaskListsTask(long maxResults, string pageToken)
-        //{
-        //    const string initialRequestString = "https://www.googleapis.com/tasks/v1/users/@me/lists";
-        //    StringBuilder requestStringBuilder = new StringBuilder(initialRequestString);
-        //    requestStringBuilder.Append('?');
-        //    requestStringBuilder.Append($"maxResults={maxResults}");
-        //    requestStringBuilder.Append($"&pageToken={pageToken}");
-
-
-
-        //    var requestUri = new Uri(requestStringBuilder.ToString());
-            
-        //    GTaskListsContainer taskListsContainer = null;
-
-        //    AddTokenInHeader(_client);
-
-        //    var responseMessage = await _client.GetAsync(requestUri);
-
-        //    if (responseMessage.IsSuccessStatusCode)
-        //    {
-        //        var responseJson = await responseMessage.Content.ReadAsStringAsync();
-        //        taskListsContainer = JsonConvert.DeserializeObject<GTaskListsContainer>(responseJson);
-        //    }
-        //    return taskListsContainer;
-        //}
-
-        
+      
 
         #endregion
 
@@ -251,7 +219,7 @@ namespace GoogleTasksUWPAPI
         {
 
             return GetTaskTask(taskListId, taskId).AsAsyncOperation();
-            
+
         }
 
         private async Task<GTask> GetTaskTask(string taskId, string taskListId)
@@ -272,6 +240,10 @@ namespace GoogleTasksUWPAPI
             return taskToReturn;
         }
 
+        public IAsyncOperation<GTask> InsertTaskAsync(GTask taskToInsert, string taskListId)
+        {
+            return InsertTaskTask(taskToInsert, taskListId).AsAsyncOperation();
+        }
 
         private async Task<GTask> InsertTaskTask(GTask taskToInsert, string taskListId)
         {
@@ -290,9 +262,14 @@ namespace GoogleTasksUWPAPI
                 var responseJson = await responseMessage.Content.ReadAsStringAsync();
                 taskToReturn = JsonConvert.DeserializeObject<GTask>(responseJson);
             }
-            
+
 
             return taskToReturn;
+        }
+
+        public IAsyncOperation<GTask> UpdateTaskAsync(GTask taskToUpdate, string taskListId)
+        {
+            return UpdateTaskTask(taskToUpdate, taskListId).AsAsyncOperation();
         }
 
         private async Task<GTask> UpdateTaskTask(GTask taskToUpdate, string taskListId)
@@ -314,6 +291,11 @@ namespace GoogleTasksUWPAPI
 
         }
 
+        public IAsyncOperation<bool> DeleteTaskAsync(GTask taskToDelete, string taskListId)
+        {
+            return DeleteTaskTask(taskToDelete, taskListId).AsAsyncOperation();
+        }
+
         private async Task<bool> DeleteTaskTask(GTask taskToDelete, string taskListId)
         {
             var requestUri = new Uri($"https://www.googleapis.com/tasks/v1/lists/{taskListId}/tasks/{taskToDelete.Id}");
@@ -323,6 +305,11 @@ namespace GoogleTasksUWPAPI
             return responseMessage.IsSuccessStatusCode;
         }
 
+        public IAsyncOperation<bool> ClearCompletedTasksAsync(string taskListId)
+        {
+            return ClearCompletedTasksTask(taskListId).AsAsyncOperation();
+        }
+
         private async Task<bool> ClearCompletedTasksTask(string taskListId)
         {
             var requestUri = new Uri($"https://www.googleapis.com/tasks/v1/lists/{taskListId}/clear");
@@ -330,7 +317,12 @@ namespace GoogleTasksUWPAPI
             var responseMessage = await _client.PostAsync(requestUri, null);
             return responseMessage.IsSuccessStatusCode;
         }
- 
+
+        public IAsyncOperation<GTask> MoveTaskAsync(string taskToMoveId, string taskListId)
+        {
+            return MoveTaskTask(taskToMoveId, taskListId).AsAsyncOperation();
+        }
+
         private async Task<GTask> MoveTaskTask(string taskToMoveId, string taskListId)
         {
             GTask taskToReturn = null;
@@ -349,7 +341,12 @@ namespace GoogleTasksUWPAPI
 
             return taskToReturn;
         }
-        
+
+        public IAsyncOperation<GTask> PatchTaskAsync(GTask taskToPatch, string taskListId)
+        {
+            return PatchTaskTask(taskToPatch, taskListId).AsAsyncOperation();
+        }
+
         private async Task<GTask> PatchTaskTask(GTask taskToPatch, string taskListId)
         {
             GTask taskToReturn = null;
