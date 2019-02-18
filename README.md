@@ -6,5 +6,5 @@ An UWP Implementation of the Google Tasks API: https://developers.google.com/tas
 Progress so far:
 - [X] OAuth
 - [X] Tasklists
-- [ ] Task
+- [X] Tasks
 - [ ] Query Options
